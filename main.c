@@ -9,7 +9,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include <linux/uinput.h>
 #include <libevdev/libevdev.h>
 #include <libevdev/libevdev-uinput.h>
 
@@ -17,23 +16,25 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
+#define IP "127.0.0.1"
 #define PORT 5000
-#define BUFFER_SIZE 16
 
-
+// packing to avoid padding
+#pragma pack(1)
 typedef struct _steeringWheelData{
-	float steeringWheelAngle;
-	unsigned char throttle;
-	unsigned char brake;
-	unsigned char clutch;
-	bool leftPaddleShift;
-	bool rightPaddleShift;
-} steeringWheelData;
+	float steeringWheelAngle; // 4 bytes
+	float throttle;
+	float brake;
+	float clutch;
+	unsigned char leftPaddleShift; // 1 byte
+	unsigned char rightPaddleShift;
+} steeringWheelData; // total 18 bytes
 
+#define BUFFER_SIZE sizeof(steeringWheelData)
 
 steeringWheelData* steeringWheelData_Init(){
 	steeringWheelData* d = (steeringWheelData*) malloc(sizeof(steeringWheelData));
-	d->steeringWheelAngle = 0.0; // currently -25.0 to 25.0
+	d->steeringWheelAngle = 0.0; // 0 to 65535
 	d->throttle = 255; // 255 to 0
 	d->brake = 255; // 255 to 0
 	d->clutch = 255; // 255 to 0
@@ -42,14 +43,10 @@ steeringWheelData* steeringWheelData_Init(){
 	return d;
 }
 
-
 int main(int argc, char** argv){
 	
 	// data structure init
 	steeringWheelData* dataStructure = steeringWheelData_Init();
-
-	// buffer
-	char buffer[BUFFER_SIZE];
 
 	// ipv4 server
 	struct sockaddr_in remote;
@@ -60,7 +57,7 @@ int main(int argc, char** argv){
 	
 	// server socket properties	
 	remote.sin_family = AF_INET;
-	remote.sin_addr.s_addr = inet_addr("127.0.0.1");
+	remote.sin_addr.s_addr = inet_addr(IP);
 	remote.sin_port = htons(PORT);
 
 	// evdev object
@@ -78,42 +75,40 @@ int main(int argc, char** argv){
 	// socket and wheel event loop
 	while(true){
 		
-		// event object loading (not using yet)
+		// setups evdev struct to next device event
 		struct input_event ev;
 		rc = libevdev_next_event(dev, LIBEVDEV_READ_FLAG_NORMAL, &ev);
 	
 		// getting normalized values for unity standard assets
-		dataStructure->steeringWheelAngle = ((libevdev_get_event_value(dev, EV_ABS, ABS_X) / 32767.5) - 1.0) * 25.0;
-		dataStructure->throttle = libevdev_get_event_value(dev, EV_ABS, ABS_Y);
-		dataStructure->brake = libevdev_get_event_value(dev, EV_ABS, ABS_Z);
-		dataStructure->clutch = libevdev_get_event_value(dev, EV_ABS, ABS_RZ);
+		dataStructure->steeringWheelAngle = (float) ((libevdev_get_event_value(dev, EV_ABS, ABS_X) / 32767.5) - 1.0) * 25.0;
+		dataStructure->throttle = (float) 1.0 - (libevdev_get_event_value(dev, EV_ABS, ABS_Y) / 255.0);
+		dataStructure->brake = (float) 1.0 - (libevdev_get_event_value(dev, EV_ABS, ABS_Z) / 255.0);
+		dataStructure->clutch = (float) 1.0 - (libevdev_get_event_value(dev, EV_ABS, ABS_RZ) / 255.0);
 		dataStructure->leftPaddleShift = libevdev_get_event_value(dev, EV_KEY, BTN_PINKIE);
 		dataStructure->rightPaddleShift = libevdev_get_event_value(dev, EV_KEY, BTN_TOP2);
 	
 		// connecting to remote udp server
 		connect(remotefd, (struct sockaddr *) &remote, remoteSize);
 
-		// reset and updating buffer value
-		memset(&buffer, 0x0, BUFFER_SIZE);
-		sprintf(buffer, "%f", dataStructure->steeringWheelAngle);
-
-		// sending buffer data
-		send(remotefd, buffer, BUFFER_SIZE, 0);
+		// sending struct data pointer
+		send(remotefd, (void*) dataStructure, BUFFER_SIZE, 0);
 
 		// printing values
-		fprintf(stdout,"\rsteering wheel: %s\tthrottle: %d\tbrake: %d\tclutch: %d\tlps: %d\trps: %d", buffer,	dataStructure->throttle,
-																												dataStructure->brake,
-																												dataStructure->clutch,
-																												dataStructure->leftPaddleShift,
-																												dataStructure->rightPaddleShift);
+		fprintf(stdout,"\rsteering wheel: %f\tthrottle: %f\tbrake: %f\tclutch: %f\tlps: %d\trps: %d", dataStructure->steeringWheelAngle,
+																									  dataStructure->throttle,
+																									  dataStructure->brake,
+																									  dataStructure->clutch,
+																									  dataStructure->leftPaddleShift,
+																									  dataStructure->rightPaddleShift);
 
 		// sleeping to fixed update
 		sleep(0.02);
 
 	}
 	
-	// free memory
+	// freeing memory
 	libevdev_free(dev);
+	free(dataStructure);
 
 	return 0;
 }

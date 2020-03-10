@@ -8,7 +8,7 @@ orig = (HOST, PORT)
 
 udp.bind(orig)
 
-BUFFER_SIZE = 40
+BUFFER_SIZE = 18
 
 while True:
     msg, client = udp.recvfrom(BUFFER_SIZE)
