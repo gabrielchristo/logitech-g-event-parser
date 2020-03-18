@@ -61,6 +61,9 @@ namespace UnityStandardAssets.Vehicles.Car
         public Single brake;
         public Single clutch;
 
+        public GameObject go;
+        
+
         // Use this for initialization
         private void Start()
         {
@@ -75,7 +78,6 @@ namespace UnityStandardAssets.Vehicles.Car
 
             m_Rigidbody = GetComponent<Rigidbody>();
             m_CurrentTorque = m_FullTorqueOverAllWheels - (m_TractionControl*m_FullTorqueOverAllWheels);
-
         }
 
         public void updateValues(Single a, Single t, Single b, Single c){
@@ -83,6 +85,8 @@ namespace UnityStandardAssets.Vehicles.Car
             this.throttle = t;
             this.brake = b;
             this.clutch = c;
+
+            //Debug.Log("Passei updateValues car controller");
         }
 
 

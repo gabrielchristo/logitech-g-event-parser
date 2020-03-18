@@ -30,17 +30,17 @@ public class SteeringWheelInputParser : MonoBehaviour
 {
     static UdpClient _udp;
     Thread _thread;
-    CarController _car;
+    public CarController _car;
     public SteeringWheelData data;
 
     void Start()
     {
-        Debug.Log("Logitech G920 Sandbox");
+        //Debug.Log("Logitech G920 Sandbox");
 
         _thread = new Thread(new ThreadStart(ThreadMethod)); 
         _thread.Start();
 
-        _car = this.GetComponent<CarController>();
+        //_car = this.GetComponent<CarController>();
 
         data = new SteeringWheelData();
     }
@@ -62,8 +62,8 @@ public class SteeringWheelInputParser : MonoBehaviour
     }
 
     // updating values on car controller
-    void FixedUpdate(){
-        _car.updateValues(data.steeringWheelAngle, data.throttle, data.brake, data.clutch);
+    void Update(){
+        if(_car != null) _car.updateValues(data.steeringWheelAngle, data.throttle, data.brake, data.clutch);
     }
 
     // close udp server socket on exit
@@ -80,7 +80,7 @@ public class SteeringWheelInputParser : MonoBehaviour
         this.data.lps = stream[16];
         this.data.rps = stream[17];
 
-        Debug.Log("Angle:"+data.steeringWheelAngle+" Acel:"+data.throttle+" Brake:"+data.brake+" Clutch:"+data.clutch+" lps:"+data.lps+" rps:"+ data.rps);
+        //Debug.Log("Angle:"+data.steeringWheelAngle+" Acel:"+data.throttle+" Brake:"+data.brake+" Clutch:"+data.clutch+" lps:"+data.lps+" rps:"+ data.rps);
         
 
     }
