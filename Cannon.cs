@@ -71,7 +71,7 @@ public class Cannon : MonoBehaviour
             Launch();
         }
 
-        Debug.Log(cannonBarrel.transform.rotation.x + "-" + cannonBarrel.transform.rotation.y + "-" + cannonBarrel.transform.rotation.z);
+        //Debug.Log(cannonBarrel.transform.rotation.x + "-" + cannonBarrel.transform.rotation.y + "-" + cannonBarrel.transform.rotation.z);
         
 
     }
@@ -82,10 +82,10 @@ public class Cannon : MonoBehaviour
         GameObject bullet = Instantiate(bulletObject, muzzle.transform.position, cannonBarrel.transform.rotation);
 
         // applying force
-        bullet.GetComponent<Rigidbody>().AddRelativeForce(cannonBarrel.transform.forward * -2000);
-        //bullet.GetComponent<Rigidbody>().velocity = cannonBarrel.transform.TransformDirection(cannonBarrel.transform.forward * -40);
+        //bullet.GetComponent<Rigidbody>().AddRelativeForce(cannonBarrel.transform.forward * -2000);
+        bullet.GetComponent<Rigidbody>().velocity = cannonBarrel.transform.TransformDirection(cannonBarrel.transform.forward * -40);
 
-        // destroying bullet and his rigid body in 3 seconds 
+        // destroying bullet and its rigid body in 3 seconds 
         Destroy(bullet.GetComponent<Rigidbody>(), 3);
         Destroy(bullet, 3);
 
@@ -113,6 +113,8 @@ public class Cannon : MonoBehaviour
         gc.left = stream[2];
         gc.right = stream[3];
         gc.fire = stream[4];
+
+        //Debug.Log(gc.up + " " + gc.down + " " + gc.left + " " + gc.right + " " + gc.fire);
     }
 
 

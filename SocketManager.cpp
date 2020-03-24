@@ -19,5 +19,6 @@ void UDP_SocketManager::connectToServer(){
 }
 
 void UDP_SocketManager::sendData(void* data, size_t len){
-	send(this->remotefd, data, len, 0);
+	if(send(this->remotefd, data, len, 0) == -1)
+		fprintf(stderr, "Failure on send socket data\t Errno: %d\n", errno);
 }

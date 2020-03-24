@@ -19,7 +19,3 @@ execute run.sh
 ### Unity StandardAssets Config (used version 2017.3)
 - replace CarController.cs script on unity standard assets vehicle's folder (and modify it if necessary)
 - attach the cannon and steeringWheelInputParser scripts to cannon and car objects respectively
-
-### Todo
-- fix cannon barrel angle
-- read formated log
